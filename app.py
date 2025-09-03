@@ -164,4 +164,67 @@ with tab3:
     st.header(" Combined Report")
 
     content_text = st.session_state.get("generated_content", "")
-    analysis_text = st.session_state.get("analysis_outp_
+    analysis_text = st.session_state.get("analysis_output", "")
+    social_text = st.session_state.get("social_posts", "")
+
+    if not content_text and not analysis_text and not social_text:
+        st.info("⚠ Please generate content, analysis, or social posts before creating a report.")
+    else:
+        combined_text = ""
+        if content_text:
+            combined_text += f"--- Generated Content ---\n\n{content_text}\n\n"
+        if analysis_text:
+            combined_text += f"--- Analysis Output ---\n\n{analysis_text}\n\n"
+        if social_text:
+            combined_text += f"--- Social Media Posts ---\n\n{social_text}"
+
+        st.text_area("📖 Preview Report", combined_text, height=400)
+
+        # PDF Export
+        pdf_file = create_pdf(content_text, analysis_text, social_text)
+        with open(pdf_file, "rb") as f:
+            st.download_button("⬇ Download Combined Report (PDF)", f, 
+                               file_name="combined_report.pdf", mime="application/pdf")
+
+        # TXT Export
+        st.download_button("⬇ Download Combined Report (TXT)", combined_text, 
+                           file_name="combined_report.txt")
+
+# ------------------ TAB 4: SOCIAL MEDIA AGENT ------------------ #
+with tab4:
+    st.header(" Social Media Agent")
+
+    platform = st.selectbox("Select Social Media Platform", ["Instagram", "Facebook", "LinkedIn", "Twitter (X)"])
+    campaign_goal = st.selectbox("Campaign Goal", ["Brand Awareness", "Product Promotion", "Event Marketing", "Engagement Boost"])
+    topic = st.text_input("Enter topic, product, or campaign theme")
+    post_count = st.slider("Number of Posts", 1, 5, 3)
+
+    if st.button(" Generate Social Media Content"):
+        with st.spinner("Creating optimized posts..."):
+            prompt = f"""
+            You are a Social Media Agent for Insights Gulfstore (Gulf-based e-commerce specializing in storage devices).
+            Generate {post_count} {platform} posts for campaign goal: {campaign_goal}.
+            Topic/Theme: {topic}.
+            Requirements:
+            - Each post should include a catchy caption (2–3 sentences).
+            - Add 5–10 relevant hashtags.
+            - Suggest best posting time for Gulf region audience.
+            - Style must be engaging, concise, and aligned with SEO/branding.
+            Output format:
+            Post #:
+            Caption:
+            Hashtags:
+            Recommended Posting Time:
+            """
+
+            posts_output = generate_response(prompt)
+            st.session_state["social_posts"] = posts_output
+
+        st.subheader("📑 Generated Social Media Posts")
+        st.write(posts_output)
+
+        st.download_button("⬇ Download Posts (TXT)", posts_output, file_name="social_media_posts.txt")
+
+        if "analysis_output" in st.session_state or "generated_content" in st.session_state:
+            st.info(" Social media posts will also be included in the combined report.")
+
